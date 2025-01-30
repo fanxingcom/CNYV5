@@ -19,10 +19,14 @@
         }
         #main-title {
             font-size: 2em; /* 标题字体大小 */
-            margin: 20px 0; /* 上下外边距 */
+            margin: 10px 0; /* 上下外边距 */
+        }
+        #main-title1 {
+            font-size: 1em; /* 下面小字字体大小 */
+            margin: 10px 0; /* 上下外边距 */
         }
         #gameWrapper {
-            width: 80vmin; /* 宽度为视口最小宽高的 80% */
+            width: 90vmin; /* 宽度为视口最小宽高的 80% */
             height: 110vmin; /* 高度为视口最小宽高的 110% */
             border: 5px solid #fb6161; /* 边框样式 */
             background-color: #20232a; /* 背景颜色 */
@@ -34,7 +38,7 @@
             display: flex; /* 使用 Flexbox 布局 */
             justify-content: flex-end; /* 水平靠右 */
             align-items: center; /* 垂直居中 */
-            width: 90%; /* 宽度为父元素的 90% */
+            width: 95%; /* 宽度为父元素的 95% */
             padding: 20px; /* 内边距 */
         }
         #controls {
@@ -48,8 +52,8 @@
             gap: 10px; /* 按钮之间的间距 */
         }
         button {
-            margin: 5px 0; /* 上下外边距 */
-            padding: 5px 10px; /* 内边距 */
+            margin: 2px 0; /* 上下外边距 */
+            padding: 5px 5px; /* 内边距 */
             font-size: 1em; /* 字体大小 */
             cursor: pointer; /* 鼠标悬停时显示手型 */
             background-color: gold; /* 背景颜色 */
@@ -58,8 +62,8 @@
             color: #20232a; /* 文本颜色 */
         }
         #joystick {
-            width: 20vmin; /* 宽度为视口最小宽高的 20% */
-            height: 20vmin; /* 高度为视口最小宽高的 20% */
+            width: 20vmin; /* 宽度为视口最小宽高的 10% */
+            height: 20vmin; /* 高度为视口最小宽高的 10% */
             background: #d483b2; /* 背景颜色 */
             border-radius: 50%; /* 圆形 */
             position: relative; /* 相对定位 */
@@ -92,7 +96,7 @@
     <h1 id="main-title">🌟🐍蛇来运转🐍🌟</h1>
 
     <div id="gameWrapper">
-        <canvas id="gameCanvas" width="400" height="550" style="width: 90%; height: 90%;"></canvas>
+        <canvas id="gameCanvas" width="400" height="550" style="width: 95%; height: 95%;"></canvas>
     </div>
     <div id="gameContainer">
         <div id="controls">
@@ -104,7 +108,7 @@
             </div>
             <div>
                 <span id="speedDisplay">速度: 180</span>
-                <span id="foodCount">食物数量: 0</span>
+                <span id="foodCount">礼物数量: 0</span>
             </div>
         </div>
         <div id="joystick" onmousedown="startDrag(event)" ontouchstart="startDrag(event)">
@@ -129,7 +133,7 @@
         let isPaused = false; // 游戏是否暂停
 
         function generateFoods() {
-            const emojis = ["🧧", "💰", "🍺",  "🌟", "🍖", "🍾", "🏆", "🎁", "🎉", "💝", "💖", "😍", "😘", "🥳", "👑", "🍕", "福"];
+            const emojis = ["🧧", "💰", "🍺",  "🌟", "🍖", "🧧", "🏆", "🎁", "🎉", "💝", "💖", "😍", "😘", "🧧", "🧧", "🍕", "福"];
             const numFoods = Math.floor(Math.random() * 15) + 2; // 随机生成食物数量
             let foodsArray = [];
             for (let i = 0; i < numFoods; i++) {
@@ -395,5 +399,6 @@
             stick.style.top = '6vmin';
         }
     </script>
+    <h1 id="main-title1">🌟🐍本游戏由辛光版权所有｜感谢您多年的支持与帮助🐍🌟</h1>
 </body>
 </html>
