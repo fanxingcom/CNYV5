@@ -191,7 +191,7 @@
 
         function updateFoodCount(count) {
             document.getElementById('foodCount').innerText = `| 财运数量: ${count}`;
-            if (count >= 1) {
+            if (count >= 66) {
                 clearInterval(game); // 停止游戏
                 showWinModal(); // 显示胜利弹窗
             }
