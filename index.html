@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇游戏</title>
+    <style>
+        /* 页面整体样式 */
+        body {
+            display: flex; /* 使用 Flexbox 布局 */
+            flex-direction: column; /* 垂直排列元素 */
+            align-items: center; /* 水平居中 */
+            justify-content: flex-start; /* 垂直从顶部开始 */
+            height: 100vh; /* 高度为视口高度 */
+            margin: 0; /* 去除默认外边距 */
+            background-color: #920f0c; /* 背景颜色 */
+            color: #61dafb; /* 文本颜色 */
+            font-family: Arial, sans-serif; /* 字体 */
+        }
+        #main-title {
+            font-size: 2em; /* 标题字体大小 */
+            margin: 20px 0; /* 上下外边距 */
+        }
+        #gameWrapper {
+            width: 80vmin; /* 宽度为视口最小宽高的 80% */
+            height: 110vmin; /* 高度为视口最小宽高的 110% */
+            border: 5px solid #fb6161; /* 边框样式 */
+            background-color: #20232a; /* 背景颜色 */
+            display: flex; /* 使用 Flexbox 布局 */
+            justify-content: center; /* 水平居中 */
+            align-items: center; /* 垂直居中 */
+        }
+        #gameContainer {
+            display: flex; /* 使用 Flexbox 布局 */
+            justify-content: flex-end; /* 水平靠右 */
+            align-items: center; /* 垂直居中 */
+            width: 90%; /* 宽度为父元素的 90% */
+            padding: 20px; /* 内边距 */
+        }
+        #controls {
+            display: flex; /* 使用 Flexbox 布局 */
+            flex-direction: column; /* 垂直排列 */
+            align-items: flex-end; /* 水平靠右 */
+            margin-right: 20px; /* 右外边距 */
+        }
+        #buttons {
+            display: flex; /* 使用 Flexbox 布局 */
+            gap: 10px; /* 按钮之间的间距 */
+        }
+        button {
+            margin: 5px 0; /* 上下外边距 */
+            padding: 5px 10px; /* 内边距 */
+            font-size: 1em; /* 字体大小 */
+            cursor: pointer; /* 鼠标悬停时显示手型 */
+            background-color: gold; /* 背景颜色 */
+            border: none; /* 无边框 */
+            border-radius: 20px; /* 圆角 */
+            color: #20232a; /* 文本颜色 */
+        }
+        #joystick {
+            width: 20vmin; /* 宽度为视口最小宽高的 20% */
+            height: 20vmin; /* 高度为视口最小宽高的 20% */
+            background: #d483b2; /* 背景颜色 */
+            border-radius: 50%; /* 圆形 */
+            position: relative; /* 相对定位 */
+            touch-action: none; /* 禁用触摸默认行为 */
+            margin-left: 20px; /* 左外边距 */
+        }
+        #stick {
+            width: 8vmin; /* 宽度为视口最小宽高的 8% */
+            height: 8vmin; /* 高度为视口最小宽高的 8% */
+            background: darkred; /* 背景颜色 */
+            border-radius: 50%; /* 圆形 */
+            position: absolute; /* 绝对定位 */
+            left: 6vmin; /* 左偏移 */
+            top: 6vmin; /* 上偏移 */
+            transition: left 0.1s, top 0.1s; /* 平滑过渡效果 */
+        }
+        .direction-icon {
+            position: absolute; /* 绝对定位 */
+            font-size: 24px; /* 字体大小 */
+            color: darkred; /* 颜色 */
+            font-weight: bold; /* 字体加粗 */
+        }
+        .up { top: 5px; left: 50%; transform: translateX(-50%) rotate(270deg); }
+        .down { bottom: 5px; left: 50%; transform: translateX(-50%) rotate(90deg); }
+        .left { left: 5px; top: 50%; transform: translateY(-50%) rotate(180deg); }
+        .right { right: 5px; top: 50%; transform: translateY(-50%); }
+    </style>
+</head>
+<body>
+    <h1 id="main-title">🌟🐍蛇来运转🐍🌟</h1>
+
+    <div id="gameWrapper">
+        <canvas id="gameCanvas" width="400" height="550" style="width: 90%; height: 90%;"></canvas>
+    </div>
+    <div id="gameContainer">
+        <div id="controls">
+            <div id="buttons">
+                <button onclick="restartGame()">重玩</button>
+                <button onclick="togglePause()">暂停/继续</button>
+                <button onclick="increaseSpeed()">加速</button>
+                <button onclick="decreaseSpeed()">减速</button>
+            </div>
+            <div>
+                <span id="speedDisplay">速度: 180</span>
+                <span id="foodCount">食物数量: 0</span>
+            </div>
+        </div>
+        <div id="joystick" onmousedown="startDrag(event)" ontouchstart="startDrag(event)">
+            <div id="stick"></div>
+            <span class="direction-icon up">➠</span>
+            <span class="direction-icon down">➠</span>
+            <span class="direction-icon left">➠</span>
+            <span class="direction-icon right">➠</span>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById("gameCanvas"); // 获取画布元素
+        const ctx = canvas.getContext("2d"); // 获取 2D 绘图上下文
+
+        const box = canvas.width / 20; // 每个方块的大小
+        let snake = [{x: 9 * box, y: 10 * box}]; // 初始化蛇的位置
+        let direction = "RIGHT"; // 初始方向
+        let foods = generateFoods(); // 生成食物
+        let score = 0; // 初始得分
+        let game; // 游戏循环变量
+        let speed = 180; // 初始速度
+        let isPaused = false; // 游戏是否暂停
+
+        function generateFoods() {
+            const emojis = ["🧧", "💰", "🍺",  "🌟", "🍖", "🍾", "🏆", "🎁", "🎉", "💝", "💖", "😍", "😘", "🥳", "👑", "🍕", "福"];
+            const numFoods = Math.floor(Math.random() * 15) + 2; // 随机生成食物数量
+            let foodsArray = [];
+            for (let i = 0; i < numFoods; i++) {
+                let foodPosition;
+                do {
+                    foodPosition = {
+                        x: Math.floor(Math.random() * 18 + 0.5) * box,
+                        y: Math.floor(Math.random() * 27 + 0.5) * box,
+                    };
+                } while (snake.some(part => part.x === foodPosition.x && part.y === foodPosition.y));
+                foodsArray.push({
+                    ...foodPosition,
+                    emoji: emojis[Math.floor(Math.random() * emojis.length)]
+                });
+            }
+            return foodsArray;
+        }
+
+        function updateFoodCount(count) {
+            document.getElementById('foodCount').innerText = `食物数量: ${count}`;
+            if (count >= 66) {
+                clearInterval(game);
+                alert("恭喜获胜！🎉蛇年快乐🐍");
+            }
+        }
+
+        function drawSnakePart(snakePart, isHead) {
+            if (isHead) {
+                ctx.fillStyle = "#61dafb"; // 头部颜色
+                ctx.beginPath();
+                const sizeMultiplier = 1.4; // 头部大小倍数
+                const ellipseWidth = box * sizeMultiplier;
+                const ellipseHeight = box;
+
+                if (direction == "RIGHT" || direction == "LEFT") {
+                    ctx.ellipse(
+                        snakePart.x + box / 2,
+                        snakePart.y + box / 2,
+                        ellipseWidth / 2,
+                        ellipseHeight / 2,
+                        0,
+                        0,
+                        Math.PI * 2
+                    );
+                } else {
+                    ctx.ellipse(
+                        snakePart.x + box / 2,
+                        snakePart.y + box / 2,
+                        ellipseHeight / 2,
+                        ellipseWidth / 2,
+                        0,
+                        0,
+                        Math.PI * 2
+                    );
+                }
+
+                ctx.fill();
+                drawEyes(snakePart);
+            } else {
+                ctx.fillStyle = "#4caf50"; // 蛇身颜色
+                ctx.strokeStyle = "#20232a"; // 蛇身边框颜色
+                ctx.lineWidth = 2; // 边框宽度
+                ctx.beginPath();
+                ctx.roundRect(snakePart.x, snakePart.y, box, box, 7.5); // 绘制圆角矩形
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+        function drawEyes(head) {
+            ctx.fillStyle = "#fff"; // 眼睛颜色
+            const eyeSize = box * 0.34; // 眼睛大小
+            const pupilSize = box * 0.18; // 瞳孔大小
+            const eyeOffset = box * 0.38; // 眼睛偏移
+            let eye1, eye2, pupil1, pupil2;
+
+            switch (direction) {
+                case "LEFT":
+                    eye1 = {x: head.x + box / 2 - eyeOffset * 1.1, y: head.y + box / 2 - eyeOffset};
+                    eye2 = {x: head.x + box / 2 - eyeOffset * 1.1, y: head.y + box / 2 + eyeOffset};
+                    pupil1 = {x: eye1.x - 1, y: eye1.y};
+                    pupil2 = {x: eye2.x - 1, y: eye2.y};
+                    break;
+                case "UP":
+                    eye1 = {x: head.x + box / 2 - eyeOffset, y: head.y + box / 2 - eyeOffset * 1.1};
+                    eye2 = {x: head.x + box / 2 + eyeOffset, y: head.y + box / 2 - eyeOffset * 1.1};
+                    pupil1 = {x: eye1.x, y: eye1.y - 1};
+                    pupil2 = {x: eye2.x, y: eye2.y - 1};
+                    break;
+                case "RIGHT":
+                    eye1 = {x: head.x + box / 2 + eyeOffset * 1.1, y: head.y + box / 2 - eyeOffset};
+                    eye2 = {x: head.x + box / 2 + eyeOffset * 1.1, y: head.y + box / 2 + eyeOffset};
+                    pupil1 = {x: eye1.x + 1, y: eye1.y};
+                    pupil2 = {x: eye2.x + 1, y: eye2.y};
+                    break;
+                case "DOWN":
+                    eye1 = {x: head.x + box / 2 - eyeOffset, y: head.y + box / 2 + eyeOffset * 1.1};
+                    eye2 = {x: head.x + box / 2 + eyeOffset, y: head.y + box / 2 + eyeOffset * 1.1};
+                    pupil1 = {x: eye1.x, y: eye1.y + 1};
+                    pupil2 = {x: eye2.x, y: eye2.y + 1};
+                    break;
+            }
+
+            ctx.beginPath();
+            ctx.arc(eye1.x, eye1.y, eyeSize, 0, Math.PI * 2); // 绘制眼睛
+            ctx.arc(eye2.x, eye2.y, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = "#000"; // 瞳孔颜色
+            ctx.beginPath();
+            ctx.arc(pupil1.x, pupil1.y, pupilSize, 0, Math.PI * 2); // 绘制瞳孔
+            ctx.arc(pupil2.x, pupil2.y, pupilSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawGame() {
+            if (isPaused) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < snake.length; i++) {
+                drawSnakePart(snake[i], i === 0);
+            }
+
+            ctx.font = `${box}px Arial`;
+            foods.forEach(food => {
+                ctx.fillText(food.emoji, food.x + 8, food.y + box - 8); // 绘制食物
+            });
+
+            let snakeX = snake[0].x;
+            let snakeY = snake[0].y;
+
+            if (direction == "LEFT") snakeX -= box;
+            if (direction == "UP") snakeY -= box;
+            if (direction == "RIGHT") snakeX += box;
+            if (direction == "DOWN") snakeY += box;
+
+            if (snakeX < 0) snakeX = canvas.width - box;
+            if (snakeY < 0) snakeY = canvas.height - box;
+            if (snakeX >= canvas.width) snakeX = 0;
+            if (snakeY >= canvas.height) snakeY = 0;
+
+            let newHead = {x: snakeX, y: snakeY};
+
+            // 移除蛇头与身体的碰撞检测
+            // if (snake.some((part, index) => index !== 0 && part.x === newHead.x && part.y === newHead.y)) {
+            //     clearInterval(game);
+            //     alert("游戏结束！");
+            //     return;
+            // }
+
+            let ateFood = false;
+            foods.forEach((food, index) => {
+                const distance = Math.sqrt(Math.pow(snakeX + box / 2 - (food.x + box / 2), 2) + Math.pow(snakeY + box / 2 - (food.y + box / 2), 2));
+                if (distance < box * 1.5) {
+                    score++;
+                    foods.splice(index, 1);
+                    ateFood = true;
+                }
+            });
+
+            if (foods.length < 24) { // 保持食物数量
+                foods = foods.concat(generateFoods().slice(0, Math.min(24 - foods.length, Math.floor(Math.random() * 4))));
+            }
+           if (ateFood) { // 保持食物随机增加数量
+              const newFoods = generateFoods().slice(0, Math.floor(Math.random() * 4));
+              foods = foods.concat(newFoods);
+            }
+
+            if (!ateFood) {
+                snake.pop();
+            }
+
+            snake.unshift(newHead);
+
+            updateFoodCount(score);
+        }
+
+        function increaseSpeed() {
+            if (speed > 60) speed -= 20; // 增加速度
+            resetGameInterval();
+        }
+
+        function decreaseSpeed() {
+            if (speed < 240) speed += 20; // 减少速度
+            resetGameInterval();
+        }
+
+        function resetGameInterval() {
+            clearInterval(game);
+            game = setInterval(drawGame, speed);
+            updateSpeedDisplay();
+        }
+
+        function updateSpeedDisplay() {
+            document.getElementById('speedDisplay').innerText = `速度: ${speed}`;
+        }
+
+        function restartGame() {
+            snake = [{x: 9 * box, y: 10 * box}];
+            direction = "RIGHT";
+            foods = generateFoods();
+            score = 0;
+            updateFoodCount(score);
+            resetGameInterval();
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+        }
+
+        window.onload = function() {
+            game = setInterval(drawGame, speed);
+        };
+
+        document.addEventListener("keydown", function(event) {
+            const key = event.keyCode;
+            if (key === 37 && direction !== "RIGHT") direction = "LEFT";
+            else if (key === 38 && direction !== "DOWN") direction = "UP";
+            else if (key === 39 && direction !== "LEFT") direction = "RIGHT";
+            else if (key === 40 && direction !== "UP") direction = "DOWN";
+        });
+
+        function startDrag(event) {
+            event.preventDefault();
+            document.addEventListener("mousemove", onDrag);
+            document.addEventListener("mouseup", stopDrag);
+            document.addEventListener("touchmove", onDrag);
+            document.addEventListener("touchend", stopDrag);
+        }
+
+        function onDrag(event) {
+            const joystick = document.getElementById("joystick");
+            const rect = joystick.getBoundingClientRect();
+            const x = (event.touches ? event.touches[0].clientX : event.clientX) - rect.left - rect.width / 2;
+            const y = (event.touches ? event.touches[0].clientY : event.clientY) - rect.top - rect.height / 2;
+
+            const angle = Math.atan2(y, x);
+            const distance = Math.sqrt(x * x + y * y);
+            const maxDistance = rect.width / 2;
+
+            if (distance < maxDistance) {
+                const stick = document.getElementById("stick");
+                stick.style.left = `${x + rect.width / 2 - stick.offsetWidth / 2}px`;
+                stick.style.top = `${y + rect.height / 2 - stick.offsetHeight / 2}px`;
+
+                if (Math.abs(x) > Math.abs(y)) {
+                    direction = x > 0 ? "RIGHT" : "LEFT";
+                } else {
+                    direction = y > 0 ? "DOWN" : "UP";
+                }
+            }
+        }
+
+        function stopDrag() {
+            document.removeEventListener("mousemove", onDrag);
+            document.removeEventListener("mouseup", stopDrag);
+            document.removeEventListener("touchmove", onDrag);
+            document.removeEventListener("touchend", stopDrag);
+
+            const stick = document.getElementById("stick");
+            stick.style.left = '6vmin';
+            stick.style.top = '6vmin';
+        }
+    </script>
+</body>
+</html>
