@@ -68,16 +68,18 @@
             height: 22vmin; /* 高度为视口最小宽高的 10% */
             background: #c8a56f; /* 背景颜色 */
             border-radius: 50%; /* 圆形 */
-            position: relative; /* 相对定位 */
+            position: relative; /* 相对定位relative */
             touch-action: none; /* 禁用触摸默认行为 */
             margin-left: 24px; /* 左外边距 */
+            align-items: flex-end; /* 水平靠右 */
+            margin-right: 20px; /* 右外边距 */
         }
         #stick {
             width: 8vmin; /* 宽度为视口最小宽高的 8% */
             height: 8vmin; /* 高度为视口最小宽高的 8% */
             background: darkred; /* 背景颜色 */
             border-radius: 50%; /* 圆形 */
-            position: absolute; /* 绝对定位 */
+            position: absolute; /* 绝对定位absolute */
             left: 7vmin; /* 左偏移 */
             top: 7vmin; /* 上偏移 */
             transition: left 0.1s, top 0.1s; /* 平滑过渡效果 */
@@ -440,6 +442,6 @@
             stick.style.top = '6vmin';
         }
     </script>
-    <h1 id="main-title1">🌟🐍本游戏由辛光版权所有｜感谢您多年的支持与帮助🐍🌟</h1>
+    <h1 id="main-title1">🌟🐍本游戏由辛光本人版权所有｜感谢您多年的支持与帮助🐍🌟</h1>
 </body>
 </html>
